@@ -1,0 +1,12 @@
+# Core Dependencies
+openai>=1.0.0
+playwright>=1.40.0
+beautifulsoup4>=4.12.0
+python-dotenv>=1.0.0
+lxml>=4.9.0
+
+# HTTP Requests
+requests>=2.31.0
+
+# Logging and Utilities
+colorlog>=6.7.0
