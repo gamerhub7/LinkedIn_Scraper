@@ -105,13 +105,13 @@ To get an OpenAI API key:
 Run the application from the command line:
 
 ```bash
-python -m src.main <linkedin_profile_url>
+python run.py <linkedin_profile_url>
 ```
 
 **Example:**
 
 ```bash
-python -m src.main https://www.linkedin.com/in/johndoe
+python run.py https://www.linkedin.com/in/johndoe
 ```
 
 ### Output Format
