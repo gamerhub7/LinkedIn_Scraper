@@ -1,66 +1,52 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Toaster, toast } from 'react-hot-toast'
-
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [username, setUsername] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [progressStep, setProgressStep] = useState(0)
-
   // Login State
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-
   // Provider State
   const [provider, setProvider] = useState('gemini')
   const [apiKey, setApiKey] = useState('')
-
   useEffect(() => {
     // Check for saved credentials
     const storedEmail = localStorage.getItem('linkedin_email')
     const storedPassword = localStorage.getItem('linkedin_password')
-
     if (storedEmail && storedPassword) {
       setEmail(storedEmail)
       setPassword(storedPassword)
       setIsLoggedIn(true)
     }
-
     // Check for saved provider settings
     const storedProvider = localStorage.getItem('llm_provider')
     const storedApiKey = localStorage.getItem('llm_api_key')
-
     if (storedProvider) setProvider(storedProvider)
     if (storedApiKey) setApiKey(storedApiKey)
   }, [])
-
   const handleLogin = (e) => {
     e.preventDefault()
-
     if (!email || !password) {
       toast.error('Please enter your LinkedIn credentials')
       return
     }
-
     if (!email.includes('@')) {
       toast.error('Please enter a valid email address')
       return
     }
-
     // Save credentials locally
     localStorage.setItem('linkedin_email', email)
     localStorage.setItem('linkedin_password', password)
-
     // Save provider settings
     localStorage.setItem('llm_provider', provider)
     localStorage.setItem('llm_api_key', apiKey)
-
     setIsLoggedIn(true)
     toast.success('Welcome back!')
   }
-
   const handleLogout = () => {
     localStorage.removeItem('linkedin_email')
     localStorage.removeItem('linkedin_password')
@@ -70,44 +56,43 @@ function App() {
     setResult(null)
     toast.success('Signed out successfully')
   }
-
   const handleGenerate = async (e) => {
     e.preventDefault()
-
     if (!username.trim()) {
       toast.error('Please enter a LinkedIn username')
       return
     }
-
     // Save settings on generate too, just in case
     localStorage.setItem('llm_provider', provider)
     localStorage.setItem('llm_api_key', apiKey)
-
     setLoading(true)
     setResult(null)
     setProgressStep(0)
-
     // Simulate progress steps
     const steps = ['Connecting to LinkedIn...', 'Scraping Profile...', 'Analyzing Data...', 'Drafting Email...']
     let currentStep = 0
-
     const interval = setInterval(() => {
       if (currentStep < steps.length - 1) {
         currentStep++
         setProgressStep(currentStep)
       }
     }, 2000)
-
     try {
       // Construct full URL if just username provided
       let profileUrl = username
       if (!username.includes('linkedin.com')) {
         profileUrl = `https://www.linkedin.com/in/${username.replace('/', '')}/`
       }
-
       // Use environment variable for API URL or fallback to localhost
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-
+      let API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      // Ensure protocol is present
+      if (!API_URL.startsWith('http')) {
+        API_URL = `https://${API_URL}`
+      }
+      // Remove trailing slash if present
+      if (API_URL.endsWith('/')) {
+        API_URL = API_URL.slice(0, -1)
+      }
       const response = await fetch(`${API_URL}/api/generate`, {
         method: 'POST',
         headers: {
@@ -121,13 +106,10 @@ function App() {
           api_key: apiKey || undefined
         }),
       })
-
       const data = await response.json()
-
       if (!response.ok) {
         throw new Error(data.detail || 'Failed to generate email')
       }
-
       setResult(data)
       toast.success('Magic email generated!')
     } catch (error) {
@@ -139,7 +121,6 @@ function App() {
       setProgressStep(0)
     }
   }
-
   return (
     <div className="min-h-screen text-white font-outfit overflow-hidden relative selection:bg-accent-pink selection:text-white">
       <Toaster position="top-center" toastOptions={{
@@ -150,14 +131,12 @@ function App() {
           border: '1px solid rgba(255, 255, 255, 0.1)',
         }
       }} />
-
       {/* Floating Background Elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-cyan/20 rounded-full blur-[120px] animate-pulse-slow" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-purple/20 rounded-full blur-[120px] animate-pulse-slow delay-1000" />
         <div className="absolute top-[40%] left-[60%] w-[20%] h-[20%] bg-accent-pink/20 rounded-full blur-[100px] animate-pulse-slow delay-2000" />
       </div>
-
       <div className="container mx-auto px-4 py-8 relative z-10">
         <header className="flex justify-between items-center mb-12">
           <div className="flex items-center gap-3">
@@ -170,7 +149,6 @@ function App() {
               LinkedIn<span className="font-light">Genius</span>
             </h1>
           </div>
-
           {isLoggedIn && (
             <button
               onClick={handleLogout}
@@ -180,7 +158,6 @@ function App() {
             </button>
           )}
         </header>
-
         <AnimatePresence mode="wait">
           {!isLoggedIn ? (
             <motion.div
@@ -192,12 +169,10 @@ function App() {
             >
               <div className="glass-card p-8 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-xl relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary-cyan/5 to-accent-purple/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
                 <div className="text-center mb-8 relative z-10">
                   <h2 className="text-3xl font-bold mb-2">Welcome Back</h2>
                   <p className="text-gray-400">Enter your credentials to continue</p>
                 </div>
-
                 <form onSubmit={handleLogin} className="space-y-6 relative z-10">
                   {/* LinkedIn Credentials */}
                   <div className="space-y-4">
@@ -223,7 +198,6 @@ function App() {
                       />
                     </div>
                   </div>
-
                   {/* AI Settings */}
                   <div className="space-y-4 pt-4 border-t border-white/10">
                     <h3 className="text-sm font-bold text-accent-amber uppercase tracking-wider">AI Settings</h3>
@@ -250,7 +224,6 @@ function App() {
                       />
                     </div>
                   </div>
-
                   <button
                     type="submit"
                     className="w-full py-3.5 bg-gradient-to-r from-primary-cyan to-blue-500 rounded-xl font-bold text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transform hover:-translate-y-0.5 transition-all duration-300"
@@ -276,7 +249,6 @@ function App() {
                   Enter a LinkedIn username and let our AI craft the perfect outreach message.
                 </p>
               </div>
-
               <div className="mb-12 relative z-10">
                 <form onSubmit={handleGenerate} className="flex flex-col md:flex-row gap-4 max-w-2xl mx-auto mb-8">
                   <div className="flex-1 relative group">
@@ -304,7 +276,6 @@ function App() {
                     )}
                   </button>
                 </form>
-
                 {/* Inline Settings for Quick Access */}
                 <div className="max-w-2xl mx-auto">
                   <details className="group glass-card rounded-xl border border-white/10 overflow-hidden">
@@ -345,7 +316,6 @@ function App() {
                   </details>
                 </div>
               </div>
-
               {loading && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -371,7 +341,6 @@ function App() {
                   </div>
                 </motion.div>
               )}
-
               {result && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95, rotateX: 20 }}
@@ -402,7 +371,6 @@ function App() {
                       </div>
                     </div>
                   </div>
-
                   {/* Email Card */}
                   <div className="glass-card p-6 rounded-2xl border border-white/10 hover:border-accent-purple/30 transition-colors group relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -419,7 +387,6 @@ function App() {
                         </svg>
                       </button>
                     </div>
-
                     <div className="mb-4">
                       <h3 className="text-xl font-bold text-white group-hover:text-accent-purple transition-colors mb-4">Generated Email</h3>
                       <div className="bg-black/30 rounded-lg p-3 mb-4 border border-white/5">
@@ -442,5 +409,4 @@ function App() {
     </div>
   )
 }
-
 export default App
