@@ -1,4 +1,7 @@
-
+"""
+LinkedIn Email Generator - Simple Runner
+Usage: python run.py <linkedin_profile_url>
+"""
 import sys
 import json
 
@@ -14,13 +17,13 @@ def main():
     else:
         url = "https://www.linkedin.com/in/yogendra-mishra-/"
 
-   
+    # Scrape profile
     profile_data = scrape_linkedin_profile(url)
 
-    
+    # Generate email
     email_data = generate_personalized_email(profile_data)
 
- 
+    # Combine results
     result = {
         'name': profile_data.get('name'),
         'title': profile_data.get('title'),
@@ -29,7 +32,7 @@ def main():
         'email': email_data
     }
 
-   
+    # Print results
     print("\n" + "="*80)
     print("RESULTS")
     print("="*80)
@@ -49,7 +52,7 @@ def main():
     print(email_data['body'])
     print("-"*80)
 
-    
+    # Save to file
     with open('result.json', 'w', encoding='utf-8') as f:
         json.dump(result, f, indent=2, ensure_ascii=False)
 

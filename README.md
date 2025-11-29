@@ -1,6 +1,6 @@
 # LinkedIn Profile Email Generator
 
-A Python application that scrapes LinkedIn profiles and generates personalized emails using OpenAI's GPT API or Azure open api key .
+A Python application that scrapes LinkedIn profiles and generates personalized emails using OpenAI's GPT API.
 
 ## Features
 
@@ -17,7 +17,7 @@ A Python application that scrapes LinkedIn profiles and generates personalized e
 ## Prerequisites
 
 - Python 3.8 or higher
-- OpenAI API key or azure openapi key
+- OpenAI API key
 - Internet connection
 
 ## Installation
@@ -25,7 +25,7 @@ A Python application that scrapes LinkedIn profiles and generates personalized e
 ### 1. Clone or Download the Project
 
 ```bash
-cd TASK
+cd F:\Yogi
 ```
 
 ### 2. Create a Virtual Environment (Recommended)
@@ -58,31 +58,9 @@ playwright install chromium
 
 Create a `.env` file in the project root directory:
 
-```
-# Copy this file and 
- #Choose your provider: 'azure' or 'openai'
-PROVIDER=azure
-
-AZURE_OPENAI_API_KEY=your azure key
-AZURE_OPENAI_ENDPOINT=https://adars-mbho2thk-eastus2.openai.azure.com
-AZURE_DEPLOYMENT_NAME=gpt-4o
-AZURE_API_VERSION=2025-01-01-preview
-AZURE_OPENAI_DEPLOYMENT=gpt-4o
-
-# OpenAI API Configuration
-OPENAI_API_KEY=your api key
-# Optional: OpenAI Model Configuration
-OPENAI_MODEL=gpt-5
-# Alternative: gpt-3.5-turbo for faster/cheaper responses
-
-LOGIN_METHOD=credentials
-#Recommended 
-LINKEDIN_EMAIL=ypur linkedin email 
-LINKEDIN_PASSWORD=your linkedin password
-
-# Optional: Rate Limiting
-MAX_RETRIES=3
-RETRY_DELAY=2
+```bash
+# Copy the example file
+cp .env.example .env
 ```
 
 Edit the `.env` file and add your OpenAI API key:
@@ -105,13 +83,13 @@ To get an OpenAI API key:
 Run the application from the command line:
 
 ```bash
-python run.py <linkedin_profile_url>
+python -m src.main <linkedin_profile_url>
 ```
 
 **Example:**
 
 ```bash
-python run.py https://www.linkedin.com/in/johndoe
+python -m src.main https://www.linkedin.com/in/johndoe
 ```
 
 ### Output Format
@@ -170,6 +148,31 @@ The application handles various error scenarios:
 }
 ```
 
+## Project Structure
+
+```
+F:\Yogi\
+├── .env                    # Environment variables (create this)
+├── .env.example           # Template for environment variables
+├── .gitignore            # Git ignore file
+├── requirements.txt      # Python dependencies
+├── README.md            # This file
+│
+├── src/                 # Source code
+│   ├── __init__.py
+│   ├── main.py          # Main application entry point
+│   ├── linkedin_scraper.py    # LinkedIn scraping logic
+│   ├── email_generator.py     # OpenAI email generation
+│   ├── config.py        # Configuration management
+│   └── utils.py         # Utility functions
+│
+├── docs/                # Documentation
+│   └── ARCHITECTURE.md  # System architecture
+│
+└── examples/           # Example scripts (optional)
+    └── example_usage.py
+```
+
 ## Configuration
 
 ### Environment Variables
@@ -188,6 +191,21 @@ You can modify settings in `src/config.py`:
 - `PAGE_LOAD_TIMEOUT`: Timeout for page loading in seconds (default: 30)
 - `IMPLICIT_WAIT`: Implicit wait time for elements (default: 10)
 
+## Advanced Usage
+
+### Using as a Python Module
+
+You can import and use the functions in your own Python scripts:
+
+```python
+from src.main import process_linkedin_profile
+
+# Process a LinkedIn profile
+url = "https://www.linkedin.com/in/johndoe"
+result = process_linkedin_profile(url)
+
+print(result)
+```
 
 ### Customizing Email Generation
 
@@ -221,7 +239,42 @@ Edit `src/email_generator.py` to customize the email generation prompt or style.
 
 **Solution:** Check if the profile is accessible in a regular browser without login.
 
+## Limitations
 
+1. **LinkedIn Access**: Only works with public LinkedIn profiles that don't require login
+2. **Rate Limiting**: Subject to OpenAI API rate limits
+3. **Dynamic Content**: Some LinkedIn profiles may have content that loads dynamically
+4. **Anti-Bot Measures**: LinkedIn may implement anti-scraping measures
+
+## Best Practices
+
+1. **Respect Rate Limits**: Don't send too many requests in a short time
+2. **Use Responsibly**: Only scrape public information and respect privacy
+3. **Monitor API Costs**: OpenAI API calls incur costs, monitor your usage
+4. **Handle Errors**: Always implement proper error handling in your code
+
+## Cost Estimation
+
+- **OpenAI API**:
+  - GPT-4: ~$0.03 per email (depending on profile length)
+  - GPT-3.5-turbo: ~$0.002 per email
+
+## Contributing
+
+Feel free to submit issues, fork the repository, and create pull requests.
+
+## License
+
+This project is for educational purposes. Please ensure you comply with LinkedIn's Terms of Service and OpenAI's usage policies.
+
+## Support
+
+For issues or questions:
+1. Check the troubleshooting section above
+2. Review the architecture documentation in `docs/ARCHITECTURE.md`
+3. Ensure all dependencies are properly installed
+
+## Changelog
 
 ### Version 1.0.0
 - Initial release

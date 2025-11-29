@@ -1,0 +1,10 @@
+{
+  "name": "John Doe",
+  "title": "Software Engineer at Google",
+  "company": "Google",
+  "about": "Passionate about AI and cloud computing. 10+ years of experience building scalable systems and leading engineering teams. Focused on machine learning, distributed systems, and developer experience.",
+  "email": {
+    "subject": "Impressed by your work on AI systems at Google",
+    "body": "Hi John,\n\nI came across your LinkedIn profile and was really impressed by your extensive experience in AI and cloud computing. Your focus on building scalable systems and leading engineering teams particularly caught my attention.\n\nI'd love to connect and learn more about your work on machine learning and distributed systems. Would you be open to a brief conversation?\n\nBest regards"
+  }
+}

@@ -9,4 +9,8 @@ lxml>=4.9.0
 requests>=2.31.0
 
 # Logging and Utilities
-colorlog>=6.7.0
+# API
+fastapi>=0.100.0
+uvicorn>=0.20.0
+python-multipart>=0.0.6
+google-generativeai>=0.0.6
