@@ -188,11 +188,24 @@ class LinkedInScraper:
         except Exception as e:
             logger.warning(f"Error expanding sections: {str(e)}")
             # Continue anyway - not a critical failure
+    def _install_browsers(self):
+        """
+        Install Playwright browsers if missing
+        """
+        import subprocess
+        try:
+            logger.info("Attempting to install Playwright browsers...")
+            subprocess.run(["playwright", "install", "chromium"], check=True)
+            logger.info("Browser installation complete.")
+        except Exception as e:
+            logger.error(f"Failed to install browsers: {e}")
     def _fetch_profile_html(self, url: str) -> Optional[str]:
         """
         Fetch the HTML content of a LinkedIn profile using Playwright
+        
         Args:
             url: LinkedIn profile URL
+            
         Returns:
             HTML content as string, or None if failed
         """
@@ -200,69 +213,80 @@ class LinkedInScraper:
             with sync_playwright() as p:
                 # Determine login method based on config
                 login_method = Config.LOGIN_METHOD
+                
                 logger.info(f"Login method: {login_method}")
-                # Method 1: Use Chrome profile (stays logged in)
-                if login_method == 'chrome_profile' and Config.CHROME_USER_DATA_DIR:
-                    logger.info(f"Using Chrome profile: {Config.CHROME_USER_DATA_DIR}")
-                    # Clean the path (remove quotes if present)
-                    chrome_path = Config.CHROME_USER_DATA_DIR.strip('"').strip("'")
-                    # Use launch_persistent_context for user data
-                    context = p.chromium.launch_persistent_context(
-                        chrome_path,
-                        headless=self.headless,
-                        channel='chrome',
-                        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        viewport={'width': 1920, 'height': 1080}
-                    )
-                    # Create new page
-                    page = context.new_page()
-                # Method 2: Use LinkedIn credentials
-                elif login_method == 'credentials':
-                    logger.info("Using LinkedIn credentials for login")
-                    # Regular browser launch without profile
-                    browser = p.chromium.launch(
-                        headless=self.headless,
-                        args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-                    )
-                    # Create context with custom user agent
-                    context = browser.new_context(
-                        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        viewport={'width': 1920, 'height': 1080}
-                    )
-                    # Create new page
-                    page = context.new_page()
-                    # Login with credentials
-                    self._login_to_linkedin(page)
-                # Method 3: No login (may not work for most profiles)
-                else:
-                    logger.warning("No login method configured - scraping may fail for private profiles")
-                    # Regular browser launch without profile
-                    browser = p.chromium.launch(
-                        headless=self.headless,
-                        args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-                    )
-                    # Create context with custom user agent
-                    context = browser.new_context(
-                        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        viewport={'width': 1920, 'height': 1080}
-                    )
-                    # Create new page
-                    page = context.new_page()
+                
+                browser = None
+                context = None
+                page = None
+                
+                try:
+                    # Attempt to launch browser
+                    if login_method == 'chrome_profile' and Config.CHROME_USER_DATA_DIR:
+                        # ... (Chrome profile logic) ...
+                        chrome_path = Config.CHROME_USER_DATA_DIR.strip('"').strip("'")
+                        context = p.chromium.launch_persistent_context(
+                            chrome_path,
+                            headless=self.headless,
+                            channel='chrome',
+                            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            viewport={'width': 1920, 'height': 1080}
+                        )
+                        page = context.new_page()
+                    else:
+                        # Regular launch
+                        browser = p.chromium.launch(
+                            headless=self.headless,
+                            args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+                        )
+                        context = browser.new_context(
+                            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            viewport={'width': 1920, 'height': 1080}
+                        )
+                        page = context.new_page()
+                        
+                        if login_method == 'credentials':
+                             self._login_to_linkedin(page)
+                except Exception as e:
+                    if "Executable doesn't exist" in str(e):
+                        logger.warning("Browser executable missing. Attempting to install...")
+                        self._install_browsers()
+                        # Retry launch
+                        browser = p.chromium.launch(
+                            headless=self.headless,
+                            args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+                        )
+                        context = browser.new_context(
+                            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            viewport={'width': 1920, 'height': 1080}
+                        )
+                        page = context.new_page()
+                        if login_method == 'credentials':
+                             self._login_to_linkedin(page)
+                    else:
+                        raise e
                 # Navigate to the profile
                 logger.info(f"Navigating to profile: {url}")
                 page.goto(url, wait_until='domcontentloaded', timeout=Config.PAGE_LOAD_TIMEOUT * 1000)
-                # Wait for content to load (increased wait time)
+                
+                # Wait for content to load
                 page.wait_for_timeout(5000)
-                # Click "see more" buttons to expand sections (especially About)
+                
+                # Click "see more" buttons
                 self._expand_see_more_sections(page)
+                
                 # Get page content
                 html_content = page.content()
+                
                 # Close context/browser
-                context.close()
+                if context: context.close()
+                if browser: browser.close()
+                
                 return html_content
         except PlaywrightTimeout:
             logger.error(f"Timeout while loading profile: {url}")
             return None
+            
         except Exception as e:
             logger.error(f"Error fetching HTML: {str(e)}")
             return None
